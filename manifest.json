@@ -1,0 +1,58 @@
+{
+  "manifest_version": 3,
+  "name": "Shopee Express Order Notifier (via JST)",
+  "version": "0.1.0",
+  "description": "แจ้งเตือนเสียงไทยทันทีเมื่อมีออเดอร์ส่งด่วน/ส่งทันทีจากทุกร้าน Shopee ผ่าน JST ERP",
+  "default_locale": "th",
+  "permissions": [
+    "storage",
+    "notifications",
+    "alarms",
+    "scripting",
+    "offscreen",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://www.jsterp.com/*",
+    "https://*.jsterp.com/*",
+    "https://*.jushuitan.com/*",
+    "https://texttospeech.googleapis.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.jsterp.com/*",
+        "https://*.jsterp.com/*"
+      ],
+      "js": ["src/content/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/content/injector.js", "assets/chime.wav"],
+      "matches": [
+        "https://www.jsterp.com/*",
+        "https://*.jsterp.com/*"
+      ]
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "assets/icon-16.png",
+      "48": "assets/icon-48.png",
+      "128": "assets/icon-128.png"
+    }
+  },
+  "options_page": "options/options.html",
+  "icons": {
+    "16": "assets/icon-16.png",
+    "48": "assets/icon-48.png",
+    "128": "assets/icon-128.png"
+  }
+}

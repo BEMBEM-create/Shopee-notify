@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <title>ตั้งค่า Shopee Express Notifier</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>ตั้งค่าแจ้งเตือนออเดอร์ส่งด่วน</h1>
+
+      <section>
+        <h2>การทำงานหลัก</h2>
+        <label class="row">
+          <input type="checkbox" id="enabled" />
+          <span>เปิดการ poll และแจ้งเตือน</span>
+        </label>
+        <label class="row">
+          <span>ความถี่ poll (วินาที)</span>
+          <select id="pollIntervalSec">
+            <option value="15">15 วินาที</option>
+            <option value="30">30 วินาที (แนะนำ)</option>
+            <option value="60">60 วินาที</option>
+          </select>
+        </label>
+        <label class="row">
+          <span>Urgent re-announce เมื่อเหลือ ≤ (นาที)</span>
+          <select id="urgentThresholdMin">
+            <option value="5">5</option>
+            <option value="10">10 (แนะนำ)</option>
+            <option value="15">15</option>
+          </select>
+        </label>
+        <label class="row">
+          <input type="checkbox" id="muted" />
+          <span>ปิดเสียงชั่วคราว (mute)</span>
+        </label>
+        <label class="row">
+          <span>เวลาเงียบ (quiet hours)</span>
+          <input type="time" id="quietHoursStart" />
+          <span>ถึง</span>
+          <input type="time" id="quietHoursEnd" />
+        </label>
+      </section>
+
+      <section>
+        <h2>เสียง TTS</h2>
+        <label class="row">
+          <span>ผู้ให้บริการ</span>
+          <select id="ttsProvider">
+            <option value="google">Google Cloud TTS Neural2 (แนะนำ)</option>
+            <option value="web">Web Speech (ฟรี, คุณภาพต่ำกว่า)</option>
+          </select>
+        </label>
+        <label class="row">
+          <span>Google Cloud TTS API Key</span>
+          <input type="password" id="googleApiKey" placeholder="AIza..." />
+        </label>
+        <label class="row">
+          <span>เสียง</span>
+          <select id="voice">
+            <option value="th-TH-Neural2-C">th-TH-Neural2-C (หญิง, แนะนำ)</option>
+            <option value="th-TH-Neural2-D">th-TH-Neural2-D</option>
+            <option value="th-TH-Standard-A">th-TH-Standard-A</option>
+          </select>
+        </label>
+        <label class="row">
+          <span>ความเร็ว (<span id="speakingRateVal">1.0</span>x)</span>
+          <input type="range" id="speakingRate" min="0.75" max="1.25" step="0.05" value="1.0" />
+        </label>
+        <div class="row buttons">
+          <button id="testVoice">ทดสอบเสียง</button>
+          <button id="simulateOrder">ทดสอบประกาศออเดอร์</button>
+          <button id="pollNow">Poll ตอนนี้</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>ช่องทางขนส่งที่ถือว่า "ส่งด่วน / ส่งทันที"</h2>
+        <p class="hint">หนึ่งคำต่อบรรทัด — match แบบ substring case-insensitive</p>
+        <textarea id="expressPatterns" rows="10"></textarea>
+      </section>
+
+      <section>
+        <h2>สถานะ</h2>
+        <pre id="status">กำลังโหลด…</pre>
+      </section>
+
+      <div class="row buttons sticky">
+        <button id="save" class="primary">บันทึก</button>
+        <span id="saveStatus"></span>
+      </div>
+    </main>
+    <script src="options.js" type="module"></script>
+  </body>
+</html>
