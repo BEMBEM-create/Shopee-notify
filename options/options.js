@@ -101,6 +101,8 @@ $("testVoice").addEventListener("click", async () => {
   await chrome.runtime.sendMessage({
     type: "test-voice",
     text: "ทดสอบเสียงไทย คุณมีออเดอร์ส่งทันที ต้องแพ็คภายใน 30 นาที",
+    voice: $("voice").value,
+    speakingRate: Number($("speakingRate").value),
   });
 });
 

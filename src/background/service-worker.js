@@ -65,7 +65,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         await handleOrder(msg.order, { simulated: true });
         sendResponse({ ok: true });
       } else if (msg?.type === "test-voice") {
-        await announce({ text: msg.text || "ทดสอบเสียงไทย Siri-like", forceSpeak: true });
+        await announce({
+          text: msg.text || "ทดสอบเสียงไทย Siri-like",
+          forceSpeak: true,
+          voiceOverride: msg.voice,
+          speakingRateOverride: msg.speakingRate,
+        });
         sendResponse({ ok: true });
       } else if (msg?.type === "get-status") {
         const s = await getSettings();
@@ -220,14 +225,16 @@ async function announceOrder(order, { urgent = false } = {}) {
   await announce({ text });
 }
 
-async function announce({ text, forceSpeak = false }) {
+async function announce({ text, forceSpeak = false, voiceOverride, speakingRateOverride }) {
   await ensureOffscreen();
   const settings = await getSettings();
+  const voice = voiceOverride || settings.voice;
+  const speakingRate = speakingRateOverride ?? settings.speakingRate;
 
   // Custom MP3 clip voice — bypass TTS entirely and play the bundled file.
   // Skip the chime too since these clips already contain the full announcement.
-  if (typeof settings.voice === "string" && settings.voice.startsWith("custom:")) {
-    const rel = settings.voice.slice("custom:".length);
+  if (typeof voice === "string" && voice.startsWith("custom:")) {
+    const rel = voice.slice("custom:".length);
     await chrome.runtime.sendMessage({
       target: "offscreen",
       type: "play",
@@ -242,8 +249,8 @@ async function announce({ text, forceSpeak = false }) {
       const r = await synthesize({
         text,
         apiKey: settings.googleApiKey,
-        voice: settings.voice,
-        speakingRate: settings.speakingRate,
+        voice,
+        speakingRate,
       });
       audioBase64 = r.audioBase64;
     } catch (e) {
@@ -257,7 +264,7 @@ async function announce({ text, forceSpeak = false }) {
       chimeUrl: chrome.runtime.getURL("assets/chime.wav"),
       audioBase64,
       text: !audioBase64 || forceSpeak ? text : null,
-      speakingRate: settings.speakingRate,
+      speakingRate,
     },
   });
 }
