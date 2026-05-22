@@ -11,7 +11,9 @@ Extension **ไม่ poll JST เอง** เพราะไม่รู้ sch
 
 **ข้อจำกัด**: ต้องเปิดแท็บ JST ค้างไว้บนหน้า "คำสั่งซื้อรอจัดส่ง" ตลอด — ปักหมุดแท็บไว้ (คลิกขวา → Pin)
 
-ถ้าผู้ใช้รู้ schema ของ POST body ของ `/OMS/MiniShopOrder/NewQueryOrders` ภายหลัง สามารถเปิด active polling ใน `src/sources/jst-web.js` (โครงสร้างวางไว้แล้ว)
+### Active polling (โหมดถี่กว่า 1 นาที)
+
+เปิดได้ที่หน้า Options → **Active poll** (15s / 30s / 45s / 60s) — เมื่อเปิดแล้ว content script จะ **replay** request ตัวล่าสุดที่ JST ส่งเอง (ใช้ session/cookie ของแท็บนั้น ไม่ต้อง reverse CSRF) ทำให้ poll ถี่กว่า 1 นาทีได้โดยไม่ reload แท็บ. แลกกับ JST รับ request เพิ่มเป็นสัดส่วน 60s ÷ interval — ใช้เท่าที่จำเป็นเพื่อไม่โดน rate limit
 
 ## ติดตั้ง
 

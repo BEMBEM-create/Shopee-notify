@@ -25,6 +25,17 @@
           </select>
         </label>
         <label class="row">
+          <span>Active poll (ถี่กว่า JST refresh เอง)</span>
+          <select id="activePollSec">
+            <option value="0">ปิด (พึ่ง JST refresh ทุก 1 นาที)</option>
+            <option value="15">ทุก 15 วินาที</option>
+            <option value="30">ทุก 30 วินาที (แนะนำ)</option>
+            <option value="45">ทุก 45 วินาที</option>
+            <option value="60">ทุก 60 วินาที</option>
+          </select>
+        </label>
+        <p class="hint">เปิดแล้วจะ replay request ที่ JST ส่งเอง (ใช้ session/cookie ของแท็บนั้น) — ไม่ใช่ reload หน้า ใช้ไม่รบกวนการใช้งาน. เพิ่ม API call ของ JST เท่าตัว ใช้เท่าที่จำเป็น</p>
+        <label class="row">
           <input type="checkbox" id="muted" />
           <span>ปิดเสียงชั่วคราว (mute)</span>
         </label>

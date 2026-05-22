@@ -1,6 +1,7 @@
 const FIELDS = [
   "enabled",
   "urgentThresholdMin",
+  "activePollSec",
   "muted",
   "quietHoursStart",
   "quietHoursEnd",
@@ -51,6 +52,7 @@ async function save() {
     if (el.type === "checkbox") local[f] = el.checked;
     else if (el.id === "speakingRate") local[f] = Number(el.value);
     else if (el.id === "urgentThresholdMin") local[f] = Number(el.value);
+    else if (el.id === "activePollSec") local[f] = Number(el.value);
     else local[f] = el.value;
   }
   const patterns = $("expressPatterns").value.split("\n").map((s) => s.trim()).filter(Boolean);
@@ -73,6 +75,7 @@ async function refreshStatus() {
   $("status").textContent = [
     `enabled: ${st.enabled}`,
     `urgent threshold: ${st.urgentThresholdMin} min`,
+    `active poll: ${st.activePollSec > 0 ? st.activePollSec + "s" : "off (JST refresh เอง ~1 min)"}`,
     `last capture: ${lastCap} (${lag})`,
     `last capture orders: ${st.lastCaptureOrders}`,
     `  ของซึ่งเป็นส่งด่วน: ${st.lastCaptureExpress}`,

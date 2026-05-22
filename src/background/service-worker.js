@@ -14,6 +14,7 @@ const ALARM_PRUNE = "prune-seen";
 const DEFAULTS = {
   enabled: false,
   urgentThresholdMin: 10,
+  activePollSec: 0,
   ttsProvider: "google",
   voice: "th-TH-Chirp3-HD-Aoede",
   speakingRate: 1.0,
@@ -60,6 +61,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         sendResponse({ ok });
       } else if (msg?.type === "settings-updated") {
         await rescheduleAlarms();
+        await broadcastActivePoll();
         sendResponse({ ok: true });
       } else if (msg?.type === "simulate-order") {
         await handleOrder(msg.order, { simulated: true });
@@ -293,6 +295,21 @@ async function triggerJstRefresh() {
     try { await chrome.tabs.reload(t.id); } catch (e) { warn("reload failed", e); }
   }
   return true;
+}
+
+async function broadcastActivePoll() {
+  const { activePollSec, enabled } = await getSettings();
+  // If extension is disabled, force interval to 0 — no point polling if we'd
+  // throw the response away in handleCapture anyway.
+  const intervalSec = enabled ? activePollSec : 0;
+  const tabs = await chrome.tabs.query({ url: ["*://*.jsterp.com/*"] });
+  for (const t of tabs) {
+    try {
+      await chrome.tabs.sendMessage(t.id, { type: "set-active-poll", intervalSec });
+    } catch {
+      // tab might not have content script yet (e.g. mid-navigation); ignore
+    }
+  }
 }
 
 function inQuietHours(settings) {
