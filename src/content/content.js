@@ -19,11 +19,14 @@
     const data = ev.data;
     if (!data || data.__shopeeNotify !== true) return;
     if (data.kind === "xhr-capture") {
-      chrome.runtime.sendMessage({
-        type: "passive-capture",
-        url: data.url,
-        body: data.body,
-      }).catch(() => {});
+      chrome.runtime
+        .sendMessage({ type: "passive-capture", url: data.url, body: data.body })
+        .then((r) => {
+          if (r?.ok && r.orders != null) {
+            console.log(tag, `forwarded capture: ${r.orders} orders, ${r.express} express`);
+          }
+        })
+        .catch(() => {});
     }
   });
 })();

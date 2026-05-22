@@ -1,5 +1,4 @@
-import { JstWebSource } from "../sources/jst-web.js";
-import { registerSource } from "../sources/source.js";
+import { parseOrderList } from "../jst/order-parser.js";
 import { loadPatterns, matchesExpress, classifyExpressType } from "../jst/express-filters.js";
 import { getSeen, markAnnounced, markUrgentAnnounced, pruneOld } from "../storage/seen-orders.js";
 import { synthesize } from "../tts/google-tts.js";
@@ -9,13 +8,11 @@ const log = (...a) => console.log(TAG, ...a);
 const warn = (...a) => console.warn(TAG, ...a);
 const error = (...a) => console.error(TAG, ...a);
 
-const ALARM_POLL = "poll-jst";
 const ALARM_URGENT = "urgent-sweep";
 const ALARM_PRUNE = "prune-seen";
 
 const DEFAULTS = {
   enabled: false,
-  pollIntervalSec: 30,
   urgentThresholdMin: 10,
   ttsProvider: "google",
   voice: "th-TH-Neural2-C",
@@ -24,44 +21,42 @@ const DEFAULTS = {
   muted: false,
   quietHoursStart: "",
   quietHoursEnd: "",
-  lastPollAt: 0,
-  lastPollOrders: 0,
-  lastPollError: "",
+  lastCaptureAt: 0,
+  lastCaptureOrders: 0,
+  lastCaptureExpress: 0,
+  lastError: "",
   announcedToday: 0,
   announcedDateKey: "",
 };
 
-registerSource(JstWebSource);
-
 chrome.runtime.onInstalled.addListener(async () => {
   log("installed");
   const cur = await chrome.storage.local.get(Object.keys(DEFAULTS));
-  const next = { ...DEFAULTS, ...cur };
-  await chrome.storage.local.set(next);
+  await chrome.storage.local.set({ ...DEFAULTS, ...cur });
   await rescheduleAlarms();
 });
 
-chrome.runtime.onStartup.addListener(() => {
-  rescheduleAlarms().catch(error);
-});
+chrome.runtime.onStartup.addListener(() => rescheduleAlarms().catch(error));
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   try {
-    if (alarm.name === ALARM_POLL) await pollOnce();
-    else if (alarm.name === ALARM_URGENT) await urgentSweep();
+    if (alarm.name === ALARM_URGENT) await urgentSweep();
     else if (alarm.name === ALARM_PRUNE) await pruneOld();
   } catch (e) {
     error(`alarm ${alarm.name} failed:`, e);
   }
 });
 
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg?.target === "offscreen") return;
   (async () => {
     try {
-      if (msg?.type === "poll-now") {
-        await pollOnce();
-        sendResponse({ ok: true });
+      if (msg?.type === "passive-capture") {
+        const result = await handleCapture(msg.url, msg.body);
+        sendResponse({ ok: true, ...result });
+      } else if (msg?.type === "poll-now") {
+        const ok = await triggerJstRefresh();
+        sendResponse({ ok });
       } else if (msg?.type === "settings-updated") {
         await rescheduleAlarms();
         sendResponse({ ok: true });
@@ -91,49 +86,60 @@ async function getSettings() {
 }
 
 async function rescheduleAlarms() {
-  const { enabled, pollIntervalSec } = await getSettings();
   await chrome.alarms.clearAll();
-  if (enabled) {
-    const periodInMinutes = Math.max(0.25, pollIntervalSec / 60);
-    chrome.alarms.create(ALARM_POLL, { periodInMinutes });
-    chrome.alarms.create(ALARM_URGENT, { periodInMinutes: 1 });
-  }
+  const { enabled } = await getSettings();
+  if (enabled) chrome.alarms.create(ALARM_URGENT, { periodInMinutes: 1 });
   chrome.alarms.create(ALARM_PRUNE, { periodInMinutes: 24 * 60 });
   log("alarms scheduled, enabled=", enabled);
 }
 
-async function pollOnce() {
+async function handleCapture(url, body) {
   const settings = await getSettings();
-  if (!settings.enabled) return;
-  const patterns = await loadPatterns();
-  const ctx = { now: new Date(), lookbackMinutes: 90, log, warn, error };
+  if (!settings.enabled) return { skipped: "disabled" };
+  if (!body) return { skipped: "no-body" };
+
+  let payload;
   try {
-    const orders = await JstWebSource.fetchNewOrders(ctx);
-    await chrome.storage.local.set({
-      lastPollAt: Date.now(),
-      lastPollOrders: orders.length,
-      lastPollError: "",
-    });
-    for (const o of orders) {
-      if (!matchesExpress(o.channel, patterns)) continue;
-      await handleOrder(o, { simulated: false });
-    }
-  } catch (e) {
-    await chrome.storage.local.set({
-      lastPollAt: Date.now(),
-      lastPollError: String(e.message || e),
-    });
+    payload = JSON.parse(body);
+  } catch {
+    return { skipped: "not-json" };
   }
+  if (!payload?.Rows?.rows || !payload?.Rows?.cols) {
+    return { skipped: "not-order-list" };
+  }
+
+  const orders = parseOrderList(payload);
+  const patterns = await loadPatterns();
+  const expressOrders = orders.filter((o) => matchesExpress(o.channel, patterns));
+
+  await chrome.storage.local.set({
+    lastCaptureAt: Date.now(),
+    lastCaptureOrders: orders.length,
+    lastCaptureExpress: expressOrders.length,
+    lastError: "",
+  });
+
+  for (const o of expressOrders) {
+    try {
+      await handleOrder(o, { simulated: false });
+    } catch (e) {
+      error("handleOrder failed:", e);
+    }
+  }
+  log(`capture: ${orders.length} orders, ${expressOrders.length} express, url=${url}`);
+  return { orders: orders.length, express: expressOrders.length };
 }
 
 async function handleOrder(order, { simulated }) {
-  const seen = await getSeen(order.orderSn);
+  const seen = await getSeen(order.orderId || order.orderSn);
+  const orderKey = order.orderId || order.orderSn;
   if (seen?.announcedAt && !simulated) return;
-  await markAnnounced(order.orderSn, {
+  await markAnnounced(orderKey, {
     deadlineSec: order.deadlineSec,
     shopName: order.shopName,
     channel: order.channel,
     type: classifyExpressType(order.channel),
+    packMinutes: order.packMinutes,
   });
   await bumpAnnouncedCount();
   await announceOrder(order);
@@ -154,12 +160,17 @@ async function urgentSweep() {
     if (Date.now() - lastUrgent < 5 * 60_000) continue;
     const orderSn = key.slice("seen:jst:".length);
     await markUrgentAnnounced(orderSn);
-    await announceOrder({
-      orderSn,
-      shopName: val.shopName || "",
-      channel: val.channel || "",
-      deadlineSec: val.deadlineSec,
-    }, { urgent: true });
+    await announceOrder(
+      {
+        orderId: orderSn,
+        orderSn,
+        shopName: val.shopName || "",
+        channel: val.channel || "",
+        deadlineSec: val.deadlineSec,
+        packMinutes: val.packMinutes,
+      },
+      { urgent: true },
+    );
   }
 }
 
@@ -172,11 +183,12 @@ async function announceOrder(order, { urgent = false } = {}) {
     : null;
   const type = classifyExpressType(order.channel);
   const prefix = urgent ? "เตือนซ้ำ " : "";
-  const tail = minutesLeft != null ? ` ต้องจัดส่งภายใน ${minutesLeft} นาที` : "";
+  const action = order.packMinutes != null ? "ต้องแพ็คภายใน" : "ต้องจัดส่งภายใน";
+  const tail = minutesLeft != null ? ` ${action} ${minutesLeft} นาที` : "";
   const shop = order.shopName ? ` ของร้าน ${order.shopName}` : "";
   const text = `${prefix}คุณมีออเดอร์${type}${shop}${tail}`;
 
-  await chrome.notifications.create(`order-${order.orderSn}-${Date.now()}`, {
+  await chrome.notifications.create(`order-${order.orderId || order.orderSn}-${Date.now()}`, {
     type: "basic",
     iconUrl: chrome.runtime.getURL("assets/icon-128.png"),
     title: urgent ? `ออเดอร์${type} ใกล้หมดเวลา!` : `ออเดอร์${type}ใหม่`,
@@ -232,6 +244,15 @@ async function ensureOffscreen() {
   } catch (e) {
     if (!String(e.message).includes("Only a single offscreen")) throw e;
   }
+}
+
+async function triggerJstRefresh() {
+  const tabs = await chrome.tabs.query({ url: ["*://*.jsterp.com/*"] });
+  if (!tabs.length) return false;
+  for (const t of tabs) {
+    try { await chrome.tabs.reload(t.id); } catch (e) { warn("reload failed", e); }
+  }
+  return true;
 }
 
 function inQuietHours(settings) {

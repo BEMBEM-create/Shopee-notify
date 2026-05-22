@@ -1,9 +1,13 @@
 // page-world script: ดักจับ XHR/fetch ของ JST แล้วส่งกลับมาทาง postMessage
-// (passive fallback — เปิดใช้เมื่อ active polling โดน CSRF/anti-bot)
+// Primary capture mechanism — content script forwards to background SW.
 
 (function () {
   if (window.__shopeeNotifyInjected) return;
   window.__shopeeNotifyInjected = true;
+
+  // Match the JST order-list endpoint specifically.
+  // Verified: POST https://asia.jsterp.com/OMS/MiniShopOrder/NewQueryOrders
+  const ORDER_URL_RE = /jsterp\.com.*(QueryOrders|MiniShopOrder)/i;
 
   const send = (url, body) => {
     window.postMessage(
@@ -15,7 +19,7 @@
   const safeText = (b) => {
     try {
       if (b == null) return null;
-      if (typeof b === "string") return b.slice(0, 500_000);
+      if (typeof b === "string") return b.length > 2_000_000 ? null : b;
       return null;
     } catch {
       return null;
@@ -27,7 +31,7 @@
     const url = typeof input === "string" ? input : input?.url;
     const resp = await origFetch.apply(this, arguments);
     try {
-      if (/jsterp\.com|jushuitan\.com/.test(url || "") && /order/i.test(url || "")) {
+      if (url && ORDER_URL_RE.test(url)) {
         const clone = resp.clone();
         clone.text().then((t) => send(url, t)).catch(() => {});
       }
@@ -46,7 +50,7 @@
     };
     xhr.addEventListener("load", () => {
       try {
-        if (/jsterp\.com|jushuitan\.com/.test(_url) && /order/i.test(_url)) {
+        if (_url && ORDER_URL_RE.test(_url)) {
           send(_url, xhr.responseText);
         }
       } catch {}

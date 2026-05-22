@@ -5,15 +5,14 @@ async function refresh() {
   if (!r?.status) { $("status").textContent = "n/a"; return; }
   const st = r.status;
   $("dot").className = "dot " + (st.enabled ? "on" : "off");
-  const lastPoll = st.lastPollAt ? new Date(st.lastPollAt).toLocaleTimeString() : "—";
-  const lag = st.lastPollAt ? Math.round((Date.now() - st.lastPollAt) / 1000) + "s" : "—";
+  const lastCap = st.lastCaptureAt ? new Date(st.lastCaptureAt).toLocaleTimeString() : "—";
+  const lag = st.lastCaptureAt ? Math.round((Date.now() - st.lastCaptureAt) / 1000) + "s" : "—";
   $("status").textContent = [
     `enabled: ${st.enabled}`,
-    `interval: ${st.pollIntervalSec}s`,
-    `last poll: ${lastPoll} (${lag} ago)`,
-    `orders last poll: ${st.lastPollOrders}`,
+    `last capture: ${lastCap} (${lag} ago)`,
+    `orders / express: ${st.lastCaptureOrders} / ${st.lastCaptureExpress}`,
     `announced today: ${st.announcedToday}`,
-    st.lastPollError ? `error: ${st.lastPollError}` : "",
+    st.lastError ? `error: ${st.lastError}` : "",
   ].filter(Boolean).join("\n");
 }
 
@@ -25,8 +24,9 @@ $("toggle").addEventListener("click", async () => {
 });
 
 $("pollNow").addEventListener("click", async () => {
-  await chrome.runtime.sendMessage({ type: "poll-now" });
-  setTimeout(refresh, 500);
+  const r = await chrome.runtime.sendMessage({ type: "poll-now" });
+  if (!r?.ok) alert("ไม่พบแท็บ JST");
+  setTimeout(refresh, 1500);
 });
 
 $("openOptions").addEventListener("click", () => chrome.runtime.openOptionsPage());

@@ -15,14 +15,7 @@
           <input type="checkbox" id="enabled" />
           <span>เปิดการ poll และแจ้งเตือน</span>
         </label>
-        <label class="row">
-          <span>ความถี่ poll (วินาที)</span>
-          <select id="pollIntervalSec">
-            <option value="15">15 วินาที</option>
-            <option value="30">30 วินาที (แนะนำ)</option>
-            <option value="60">60 วินาที</option>
-          </select>
-        </label>
+        <p class="hint">โหมดทำงาน: <strong>Passive interception</strong> — ดักจับ response ที่ JST เรียกเองทุก 1 นาที ต้องเปิดแท็บ JST ค้างไว้บนหน้า "คำสั่งซื้อรอจัดส่ง"</p>
         <label class="row">
           <span>Urgent re-announce เมื่อเหลือ ≤ (นาที)</span>
           <select id="urgentThresholdMin">

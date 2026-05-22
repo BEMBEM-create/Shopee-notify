@@ -1,6 +1,5 @@
 const FIELDS = [
   "enabled",
-  "pollIntervalSec",
   "urgentThresholdMin",
   "muted",
   "quietHoursStart",
@@ -12,12 +11,15 @@ const FIELDS = [
 ];
 
 const DEFAULT_PATTERNS = [
-  "ส่งด่วน",
   "ส่งทันที",
-  "Shopee Express Instant",
-  "Shopee Express Same Day",
-  "SPX Instant",
-  "SPX Same Day",
+  "จัดส่งทันที",
+  "JstHourDelivery",
+  "Instant Delivery",
+  "แพ็ก 30 นาที",
+  "แพ็ก 2 ชั่วโมง",
+  "shopee express instant",
+  "spx instant",
+  "spx same day",
   "Lalamove",
   "GrabExpress",
   "LINE MAN",
@@ -47,9 +49,8 @@ async function save() {
     const el = $(f);
     if (!el) continue;
     if (el.type === "checkbox") local[f] = el.checked;
-    else if (el.type === "number" || el.tagName === "SELECT" && /^\d/.test(el.value)) local[f] = Number(el.value);
     else if (el.id === "speakingRate") local[f] = Number(el.value);
-    else if (el.id === "pollIntervalSec" || el.id === "urgentThresholdMin") local[f] = Number(el.value);
+    else if (el.id === "urgentThresholdMin") local[f] = Number(el.value);
     else local[f] = el.value;
   }
   const patterns = $("expressPatterns").value.split("\n").map((s) => s.trim()).filter(Boolean);
@@ -65,14 +66,17 @@ async function refreshStatus() {
   const s = await chrome.runtime.sendMessage({ type: "get-status" }).catch(() => null);
   if (!s?.status) { $("status").textContent = "ไม่สามารถดึงสถานะได้"; return; }
   const st = s.status;
-  const lastPoll = st.lastPollAt ? new Date(st.lastPollAt).toLocaleString() : "—";
+  const lastCap = st.lastCaptureAt ? new Date(st.lastCaptureAt).toLocaleString() : "—";
+  const lag = st.lastCaptureAt
+    ? Math.round((Date.now() - st.lastCaptureAt) / 1000) + "s ago"
+    : "ไม่เคยจับข้อมูล (ต้องเปิดแท็บ JST ค้างไว้)";
   $("status").textContent = [
     `enabled: ${st.enabled}`,
-    `poll interval: ${st.pollIntervalSec}s`,
     `urgent threshold: ${st.urgentThresholdMin} min`,
-    `last poll: ${lastPoll}`,
-    `last poll orders: ${st.lastPollOrders}`,
-    `last poll error: ${st.lastPollError || "(none)"}`,
+    `last capture: ${lastCap} (${lag})`,
+    `last capture orders: ${st.lastCaptureOrders}`,
+    `  ของซึ่งเป็นส่งด่วน: ${st.lastCaptureExpress}`,
+    `last error: ${st.lastError || "(none)"}`,
     `announced today: ${st.announcedToday}`,
   ].join("\n");
 }
@@ -86,7 +90,7 @@ $("save").addEventListener("click", save);
 $("testVoice").addEventListener("click", async () => {
   await chrome.runtime.sendMessage({
     type: "test-voice",
-    text: "ทดสอบเสียงไทย คุณมีออเดอร์ส่งด่วน ของร้านทดสอบ ต้องจัดส่งภายใน 30 นาที",
+    text: "ทดสอบเสียงไทย คุณมีออเดอร์ส่งทันที ของร้านทดสอบ ต้องแพ็คภายใน 30 นาที",
   });
 });
 
@@ -94,22 +98,28 @@ $("simulateOrder").addEventListener("click", async () => {
   const now = Math.floor(Date.now() / 1000);
   const fakeOrder = {
     id: `jst:SIM-${Date.now()}`,
-    orderSn: `SIM-${Date.now()}`,
-    shopName: "ร้านทดสอบ ABC",
+    orderId: `SIM-${Date.now()}`,
+    orderSn: `2605SIM${Date.now().toString().slice(-6)}`,
+    shopName: "Maydicine_drugstore_Shopee",
     platform: "Shopee",
-    channel: "Shopee Express Instant",
+    channel: "Instant Delivery - ส่งทันที (แพ็ก 30 นาที) | JstHourDelivery | จัดส่งทันที",
+    logisticsName: "Instant Delivery - ส่งทันที (แพ็ก 30 นาที)",
+    packMinutes: 30,
     payTimeSec: now,
     deadlineSec: now + 28 * 60,
-    status: "wait_ship",
+    statusCode: "WaitConfirm",
     raw: { sim: true },
   };
   await chrome.runtime.sendMessage({ type: "simulate-order", order: fakeOrder });
 });
 
 $("pollNow").addEventListener("click", async () => {
-  await chrome.runtime.sendMessage({ type: "poll-now" });
-  setTimeout(refreshStatus, 1000);
+  const r = await chrome.runtime.sendMessage({ type: "poll-now" });
+  if (!r?.ok) {
+    alert("ไม่พบแท็บ JST ที่เปิดอยู่ — กรุณาเปิด https://asia.jsterp.com ก่อน");
+  }
+  setTimeout(refreshStatus, 1500);
 });
 
 load();
-setInterval(refreshStatus, 10_000);
+setInterval(refreshStatus, 5_000);
