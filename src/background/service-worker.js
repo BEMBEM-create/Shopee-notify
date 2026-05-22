@@ -223,6 +223,19 @@ async function announceOrder(order, { urgent = false } = {}) {
 async function announce({ text, forceSpeak = false }) {
   await ensureOffscreen();
   const settings = await getSettings();
+
+  // Custom MP3 clip voice — bypass TTS entirely and play the bundled file.
+  // Skip the chime too since these clips already contain the full announcement.
+  if (typeof settings.voice === "string" && settings.voice.startsWith("custom:")) {
+    const rel = settings.voice.slice("custom:".length);
+    await chrome.runtime.sendMessage({
+      target: "offscreen",
+      type: "play",
+      payload: { customAudioUrl: chrome.runtime.getURL(rel) },
+    });
+    return;
+  }
+
   let audioBase64 = null;
   if (settings.ttsProvider === "google" && settings.googleApiKey) {
     try {

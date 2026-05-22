@@ -30,6 +30,10 @@ async function drain() {
 }
 
 async function playItem(item) {
+  if (item.customAudioUrl) {
+    await playAudio(item.customAudioUrl);
+    return;
+  }
   if (item.chimeUrl) {
     await playAudio(item.chimeUrl).catch(() => {});
   }
