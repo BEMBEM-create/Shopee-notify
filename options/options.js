@@ -90,7 +90,7 @@ $("save").addEventListener("click", save);
 $("testVoice").addEventListener("click", async () => {
   await chrome.runtime.sendMessage({
     type: "test-voice",
-    text: "ทดสอบเสียงไทย คุณมีออเดอร์ส่งทันที ของร้านทดสอบ ต้องแพ็คภายใน 30 นาที",
+    text: "ทดสอบเสียงไทย คุณมีออเดอร์ส่งทันที ต้องแพ็คภายใน 30 นาที",
   });
 });
 

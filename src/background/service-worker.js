@@ -185,8 +185,10 @@ async function announceOrder(order, { urgent = false } = {}) {
   const prefix = urgent ? "เตือนซ้ำ " : "";
   const action = order.packMinutes != null ? "ต้องแพ็คภายใน" : "ต้องจัดส่งภายใน";
   const tail = minutesLeft != null ? ` ${action} ${minutesLeft} นาที` : "";
-  const shop = order.shopName ? ` ของร้าน ${order.shopName}` : "";
-  const text = `${prefix}คุณมีออเดอร์${type}${shop}${tail}`;
+  // ชื่อร้านมักเป็นภาษาอังกฤษ (เช่น Maydicine_drugstore_Shopee) — ถ้าใส่ใน TTS
+  // เสียงไทยจะอ่านสะกดทีละตัวอักษร ฟังไม่ลื่น เลยตัดออกจากเสียง แต่ยังโชว์ใน
+  // notification popup ให้เห็นด้วยตา
+  const text = `${prefix}คุณมีออเดอร์${type}${tail}`;
 
   await chrome.notifications.create(`order-${order.orderId || order.orderSn}-${Date.now()}`, {
     type: "basic",
