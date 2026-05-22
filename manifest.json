@@ -3,7 +3,6 @@
   "name": "Shopee Express Order Notifier (via JST)",
   "version": "0.1.0",
   "description": "แจ้งเตือนเสียงไทยทันทีเมื่อมีออเดอร์ส่งด่วน/ส่งทันทีจากทุกร้าน Shopee ผ่าน JST ERP",
-  "default_locale": "th",
   "permissions": [
     "storage",
     "notifications",
