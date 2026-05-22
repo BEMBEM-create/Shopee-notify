@@ -43,7 +43,7 @@ Extension รวมหลายฟิลด์ของ JST เป็น "channe
 
 ## เสียง TTS
 
-**Google Cloud TTS Neural2** (แนะนำ) — เสียง `th-TH-Neural2-C`, ~$0.0013/ประกาศ, มี cache ในตัว 5 MB
+**Google Cloud TTS Chirp3-HD** (แนะนำ) — default คือ `th-TH-Chirp3-HD-Aoede` (หญิง) เสียง Generative ของ Google ปี 2025 ที่เหมือนคนพูดจริง ไม่อ่านเป็นตัวๆ มี cache ในตัว 5 MB ราคา ~$0.003/ประกาศ. หรือเลือก Neural2/Standard ได้ในหน้า Options
 
 ขั้นตอน:
 1. https://console.cloud.google.com/ → enable **Text-to-Speech API**
@@ -74,7 +74,7 @@ src/
   jst/__samples__/order-list.json  real JST response (truncated PII)
   sources/source.js, jst-web.js  scaffold for active polling (future)
   storage/seen-orders.js         dedupe + urgent state
-  tts/google-tts.js              Neural2 + cache
+  tts/google-tts.js              Chirp3-HD/Neural2 + cache
   offscreen/                     audio playback (MV3 workaround)
 options/, popup/
 ```

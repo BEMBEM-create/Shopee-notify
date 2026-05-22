@@ -41,7 +41,7 @@
         <label class="row">
           <span>ผู้ให้บริการ</span>
           <select id="ttsProvider">
-            <option value="google">Google Cloud TTS Neural2 (แนะนำ)</option>
+            <option value="google">Google Cloud TTS (แนะนำ)</option>
             <option value="web">Web Speech (ฟรี, คุณภาพต่ำกว่า)</option>
           </select>
         </label>
@@ -52,11 +52,26 @@
         <label class="row">
           <span>เสียง</span>
           <select id="voice">
-            <option value="th-TH-Neural2-C">th-TH-Neural2-C (หญิง, แนะนำ)</option>
-            <option value="th-TH-Neural2-D">th-TH-Neural2-D</option>
-            <option value="th-TH-Standard-A">th-TH-Standard-A</option>
+            <optgroup label="Chirp3-HD (ใหม่, เหมือนคนพูดที่สุด)">
+              <option value="th-TH-Chirp3-HD-Aoede">Aoede (หญิง, แนะนำ)</option>
+              <option value="th-TH-Chirp3-HD-Kore">Kore (หญิง)</option>
+              <option value="th-TH-Chirp3-HD-Leda">Leda (หญิง)</option>
+              <option value="th-TH-Chirp3-HD-Zephyr">Zephyr (หญิง)</option>
+              <option value="th-TH-Chirp3-HD-Charon">Charon (ชาย)</option>
+              <option value="th-TH-Chirp3-HD-Fenrir">Fenrir (ชาย)</option>
+              <option value="th-TH-Chirp3-HD-Orus">Orus (ชาย)</option>
+              <option value="th-TH-Chirp3-HD-Puck">Puck (ชาย)</option>
+            </optgroup>
+            <optgroup label="Neural2 (รุ่นก่อน)">
+              <option value="th-TH-Neural2-C">th-TH-Neural2-C (หญิง)</option>
+              <option value="th-TH-Neural2-D">th-TH-Neural2-D</option>
+            </optgroup>
+            <optgroup label="Standard (คุณภาพต่ำสุด)">
+              <option value="th-TH-Standard-A">th-TH-Standard-A</option>
+            </optgroup>
           </select>
         </label>
+        <p class="hint">Chirp3-HD เป็นเสียง Generative ของ Google ปี 2025 — ออกเสียงไทยใกล้คนพูดจริงมาก ไม่อ่านเป็นตัวๆ</p>
         <label class="row">
           <span>ความเร็ว (<span id="speakingRateVal">1.0</span>x)</span>
           <input type="range" id="speakingRate" min="0.75" max="1.25" step="0.05" value="1.0" />
@@ -77,6 +92,12 @@
       <section>
         <h2>สถานะ</h2>
         <pre id="status">กำลังโหลด…</pre>
+      </section>
+
+      <section>
+        <h2>ออเดอร์ล่าสุดที่ดักจับได้ (debug)</h2>
+        <p class="hint">ถ้าออเดอร์ที่ควรเป็น "ส่งทันที" ไม่ถูกแจ้งเตือน เช็คคอลัมน์ <strong>matched</strong> ถ้าเป็น <code>false</code> แปลว่า channel string ไม่ตรง pattern — ก็อปข้อความใน channel ไปเพิ่มที่ช่อง "ช่องทางขนส่ง" ด้านบน</p>
+        <pre id="channelSamples">—</pre>
       </section>
 
       <div class="row buttons sticky">

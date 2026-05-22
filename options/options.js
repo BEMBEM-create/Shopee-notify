@@ -79,6 +79,16 @@ async function refreshStatus() {
     `last error: ${st.lastError || "(none)"}`,
     `announced today: ${st.announcedToday}`,
   ].join("\n");
+
+  const samples = st.lastChannelSamples || [];
+  $("channelSamples").textContent = samples.length
+    ? samples
+        .map((s, i) => {
+          const tag = s.matched ? `✓ ${s.type}` : "✗ ไม่ match";
+          return `[${i + 1}] ${tag}\n    ร้าน: ${s.shopName || "—"}\n    status: ${s.statusCode || "—"}\n    channel: ${s.channel}`;
+        })
+        .join("\n\n")
+    : "ยังไม่มีข้อมูล — เปิดแท็บ JST แล้วรอประมาณ 1 นาที";
 }
 
 $("speakingRate").addEventListener("input", (e) => {

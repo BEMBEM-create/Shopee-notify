@@ -8,7 +8,7 @@ function hash(s) {
   return (h >>> 0).toString(36);
 }
 
-export async function synthesize({ text, apiKey, voice = "th-TH-Neural2-C", speakingRate = 1.0 }) {
+export async function synthesize({ text, apiKey, voice = "th-TH-Chirp3-HD-Aoede", speakingRate = 1.0 }) {
   if (!apiKey) throw new Error("missing google tts api key");
 
   const ck = cacheKey(text, voice, speakingRate);

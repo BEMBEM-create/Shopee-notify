@@ -15,7 +15,7 @@ const DEFAULTS = {
   enabled: false,
   urgentThresholdMin: 10,
   ttsProvider: "google",
-  voice: "th-TH-Neural2-C",
+  voice: "th-TH-Chirp3-HD-Aoede",
   speakingRate: 1.0,
   googleApiKey: "",
   muted: false,
@@ -24,6 +24,7 @@ const DEFAULTS = {
   lastCaptureAt: 0,
   lastCaptureOrders: 0,
   lastCaptureExpress: 0,
+  lastChannelSamples: [],
   lastError: "",
   announcedToday: 0,
   announcedDateKey: "",
@@ -112,10 +113,24 @@ async function handleCapture(url, body) {
   const patterns = await loadPatterns();
   const expressOrders = orders.filter((o) => matchesExpress(o.channel, patterns));
 
+  // Diagnostic: keep up to 10 of the LATEST orders' channel strings with their
+  // match decision, so the options page can show "this is what JST actually
+  // returns" — invaluable when something that should match (e.g. ส่งทันที)
+  // mysteriously doesn't trigger a popup.
+  const channelSamples = orders.slice(0, 10).map((o) => ({
+    orderSn: o.orderSn,
+    shopName: o.shopName,
+    channel: o.channel,
+    statusCode: o.statusCode,
+    matched: matchesExpress(o.channel, patterns),
+    type: matchesExpress(o.channel, patterns) ? classifyExpressType(o.channel) : null,
+  }));
+
   await chrome.storage.local.set({
     lastCaptureAt: Date.now(),
     lastCaptureOrders: orders.length,
     lastCaptureExpress: expressOrders.length,
+    lastChannelSamples: channelSamples,
     lastError: "",
   });
 
@@ -133,7 +148,10 @@ async function handleCapture(url, body) {
 async function handleOrder(order, { simulated }) {
   const seen = await getSeen(order.orderId || order.orderSn);
   const orderKey = order.orderId || order.orderSn;
-  if (seen?.announcedAt && !simulated) return;
+  if (seen?.announcedAt && !simulated) {
+    log(`skip already-announced ${orderKey} (channel=${order.channel})`);
+    return;
+  }
   await markAnnounced(orderKey, {
     deadlineSec: order.deadlineSec,
     shopName: order.shopName,
