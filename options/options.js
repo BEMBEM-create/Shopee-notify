@@ -12,19 +12,10 @@ const FIELDS = [
 ];
 
 const DEFAULT_PATTERNS = [
-  "ส่งทันที",
-  "จัดส่งทันที",
-  "JstHourDelivery",
-  "Instant Delivery",
-  "แพ็ก 30 นาที",
-  "แพ็ก 2 ชั่วโมง",
-  "shopee express instant",
-  "spx instant",
-  "spx same day",
-  "Lalamove",
-  "GrabExpress",
-  "LINE MAN",
-  "Pandago",
+  "Instant Delivery - ส่งทันที (แพ็ก 30 นาที)",
+  "Instant Delivery - ส่งทันที (แพ็ก 2 ชั่วโมง)",
+  "Express Delivery (SPX)",
+  "Express Delivery (SHP Food)",
 ];
 
 const $ = (id) => document.getElementById(id);
