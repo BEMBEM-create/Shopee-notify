@@ -1,33 +1,146 @@
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  margin: 0;
-  padding: 12px;
-  width: 280px;
-  background: #f6f7fb;
+:root {
+  --brand: #ee4d2d;
+  --brand-dark: #d6442a;
+  --brand-soft: #fff1ec;
+  --bg: #f4f5fb;
+  --card: #ffffff;
+  --text: #1c1f25;
+  --muted: #6b7280;
+  --border: #e7e9f1;
+  --on: #16a34a;
+  --on-soft: #e8f7ee;
+  --off: #dc2626;
+  --off-soft: #fdeaea;
+  --radius: 14px;
+  --shadow: 0 6px 20px rgba(20, 23, 40, 0.08);
 }
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-.dot.on { background: #2f855a; }
-.dot.off { background: #c53030; }
-.row { display: flex; gap: 6px; margin-bottom: 8px; }
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Sukhumvit Set", sans-serif;
+  margin: 0;
+  padding: 14px;
+  width: 320px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.header .logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  flex: none;
+  box-shadow: var(--shadow);
+}
+.header .titles { line-height: 1.25; min-width: 0; }
+.header .title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.header .subtitle {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Status banner */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--off-soft);
+  border: 1px solid transparent;
+  margin-bottom: 12px;
+  transition: background 0.2s ease;
+}
+.banner.on { background: var(--on-soft); }
+.banner .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--off);
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15);
+}
+.banner.on .dot {
+  background: var(--on);
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15); }
+  50% { box-shadow: 0 0 0 7px rgba(22, 163, 74, 0.05); }
+}
+.banner .banner-text { line-height: 1.3; }
+.banner .banner-title { font-size: 13px; font-weight: 700; }
+.banner.on .banner-title { color: var(--on); }
+.banner:not(.on) .banner-title { color: var(--off); }
+.banner .banner-sub { font-size: 11px; color: var(--muted); }
+
+/* Buttons */
+.row { display: flex; gap: 8px; margin-bottom: 12px; }
 button {
   flex: 1;
   font: inherit;
-  padding: 6px 8px;
-  border: 1px solid #cbd2dc;
-  border-radius: 6px;
-  background: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 9px 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
   cursor: pointer;
+  transition: transform 0.08s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
-button:hover { background: #eef1f6; }
-pre {
-  background: #0f172a;
-  color: #cbd5e1;
-  padding: 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  margin: 0;
-  white-space: pre-wrap;
-  max-height: 200px;
-  overflow: auto;
+button:hover { background: #f3f5fa; box-shadow: var(--shadow); }
+button:active { transform: translateY(1px); }
+button.primary {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+button.primary:hover { background: var(--brand-dark); }
+button.primary.is-on {
+  background: var(--card);
+  border-color: var(--off);
+  color: var(--off);
+}
+button.primary.is-on:hover { background: var(--off-soft); }
+
+/* Status card */
+.status-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 14px;
+  box-shadow: var(--shadow);
+}
+.stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.stat:last-child { border-bottom: none; }
+.stat-label { color: var(--muted); }
+.stat-value { font-weight: 600; text-align: right; }
+.stat-value.error { color: var(--off); }
+.status-empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 16px 0;
 }

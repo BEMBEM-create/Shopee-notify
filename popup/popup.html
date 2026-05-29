@@ -7,15 +7,29 @@
   </head>
   <body>
     <div class="header">
-      <strong>Shopee Express Notifier</strong>
+      <img class="logo" src="../assets/icon-48.png" alt="" />
+      <div class="titles">
+        <div class="title">Shopee Express Notifier</div>
+        <div class="subtitle">แจ้งเตือนออเดอร์ส่งด่วนอัตโนมัติ</div>
+      </div>
+    </div>
+
+    <div id="banner" class="banner">
       <span id="dot" class="dot off"></span>
+      <div class="banner-text">
+        <div id="bannerTitle" class="banner-title">กำลังโหลด…</div>
+        <div id="bannerSub" class="banner-sub">กำลังตรวจสอบสถานะ</div>
+      </div>
     </div>
+
     <div class="row">
-      <button id="toggle">เปิด/ปิด</button>
-      <button id="pollNow">Poll</button>
-      <button id="openOptions">ตั้งค่า</button>
+      <button id="toggle" class="primary">เปิด/ปิด</button>
+      <button id="pollNow">⟳ Poll</button>
+      <button id="openOptions">⚙ ตั้งค่า</button>
     </div>
-    <pre id="status"></pre>
+
+    <div id="status" class="status-card"></div>
+
     <script src="popup.js" type="module"></script>
   </body>
 </html>
